@@ -1,8 +1,9 @@
 from rest_framework import serializers
 
 from .models import MstComponent
-from .models import CADDesignTemplates
-from masters.models import MstSubCategory,MstCategory, MstSectionRules, MstSectionGroupings,MstSubCategoryTwo
+from .models import CADDesignTemplates, CADVerifierTemplates
+from masters.models import MstSubCategory,MstCategory, MstSectionRules, MstSectionGroupings,MstSubCategoryTwo,\
+    MstVerifierField
 
 
 class ComponentSerializer(serializers.ModelSerializer):
@@ -47,7 +48,7 @@ class SectionGroupingsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MstSectionGroupings
-        fields = ['id', 'design_doc', 'design_name', 'rules']
+        fields = ['id', 'design_doc', 'section_name', 'rules', 'design_options']
         
 
 class SubCategoryTwoSerializer(serializers.ModelSerializer):    
@@ -105,3 +106,15 @@ class CustomComponentSerializer(serializers.Serializer):
                 for category in component.component_categories.all()
             ],
         }
+
+
+class MstVerifierFieldSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MstVerifierField
+        fields = ['id', 'field_name']
+
+
+class CADVerifierTemplateSerializer(serializers.ModelSerializer):       
+    class Meta:
+        model = CADVerifierTemplates
+        fields = '__all__'

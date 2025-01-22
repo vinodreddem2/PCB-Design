@@ -28,15 +28,16 @@ class LoginView(APIView):
         print('Inside teh Log in View Post')
         email = request.data.get('email')
         password = request.data.get('password')
-        user = authenticate(email=email, password=password)
-
-        if user:
+        user = authenticate(email=email, password=password)                
+        if user:                
+            user_role = user.role
             user.is_logged_out = False
             user.save()
             refresh = RefreshToken.for_user(user)
             return Response({
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
+                'role': user_role,
             })
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 

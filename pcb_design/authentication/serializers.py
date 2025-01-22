@@ -48,6 +48,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         print("vinod role is ", role)
         if role not in valid_roles:
             role = 'CADesigner'
+        user.role = role
         group, created = Group.objects.get_or_create(name=role)
 
         # Assign the user to the group

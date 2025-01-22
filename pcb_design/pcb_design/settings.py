@@ -14,8 +14,7 @@ from pathlib import Path
 from datetime import timedelta 
 import os 
 from dotenv import load_dotenv
-# import dj_database_url
-# Load environment variables from .env file
+import dj_database_url
 load_dotenv()
 
 
@@ -32,7 +31,7 @@ SECRET_KEY = 'django-insecure-jawafdzu&qb#a(n#udlvf*9_oqv$o%_=znvu9v#pp6kri=2(2o
 # SECURITY WARNING: don't run with debug turned on in production!
 
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['pcb-design-5nqf.onrender.com','127.0.0.1', '*']
 
 # ALLOWED_HOSTS = ["127.0.0.1","localhost"]
 # ALLOWED_HOSTS+=os.getenv("ALLOWED_HOSTS", "").split(",")
@@ -48,22 +47,26 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'import_export',
     'drf_yasg',   
     'right_to_draw',
     'authentication',
     'masters',
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGIN_REGEXES = [r"^https?://localhost(:\d+)?$"]
 ROOT_URLCONF = 'pcb_design.urls'
 
 AUTH_USER_MODEL= 'authentication.CustomUser'
@@ -90,30 +93,48 @@ WSGI_APPLICATION = 'pcb_design.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'mssql',
-        'NAME': os.getenv('DB_NAME', 'PCB_NEW3'),
-        'USER': os.getenv('DB_USER', 'admin'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'Server.2'),
-        'HOST': os.getenv('DB_HOST', 'localhost\SQLEXPRESS'),
-        'PORT': '',
-        'OPTIONS': {
-            'autocommit': True,
-            'driver': 'ODBC Driver 17 for SQL Server',
-            'extra_params': 'DataTypeCompatibility=80;MARS Connection=True;',
-            'use_legacy_date_fields': True,
-        },
-    },
-}
+# DATABASES = {
+#     'default':dj_database_url.parse(os.getenv('DATABASE_URL')) 
+# }
 
-# DATABASE_URL = os.getenv("DATABASE_URL", "")
-# if DATABASE_URL:
-#     DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=False)
+# # Ensure SSL is enabled (no SSL root certificate required)
+# DATABASES['default']['OPTIONS'] = {
+#     'sslmode': 'require',  # Ensure the connection is over SSL
+# }
+DATABASES = {}
+
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+if DATABASE_URL:
+    DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=False)
+
+# Parse the database URL from the environment variable
+# DATABASES = {
+#     'default': dj_database_url.parse(os.getenv('DATABASE_URL'), conn_max_age=600)
+# }
+
+# Set SSL connection mode to 'require'
+# DATABASES['default']['OPTIONS'] = {
+#     'sslmode': 'require',  # Enforces SSL connection, no root cert required
+# }
 
 # https://www.dundas.com/support/learning/documentation/installation/how-to-enable-sql-server-authentication#:~:text=In%20the%20Object%20Explorer%2C%20right,the%20server%20and%20click%20Properties.&text=On%20the%20Security%20page%20under,mode%20and%20then%20click%20OK.&text=In%20the%20Object%20Explorer%2C%20right%2Dclick%20your%20server%20and%20click,it%20must%20also%20be%20restarted.
 
-
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'mssql',
+#         'NAME': os.getenv('DB_NAME', 'PCB_NEW5'),
+#         'USER': os.getenv('DB_USER', 'admin'),
+#         'PASSWORD': os.getenv('DB_PASSWORD', 'Server.2'),
+#         'HOST': os.getenv('DB_HOST', 'localhost\SQLEXPRESS'),
+#         'PORT': '',
+#         'OPTIONS': {
+#             'autocommit': True,
+#             'driver': 'ODBC Driver 17 for SQL Server',
+#             'extra_params': 'DataTypeCompatibility=80;MARS Connection=True;',
+#             'use_legacy_date_fields': True,
+#         },
+#     },
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -168,6 +189,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 APPEND_SLASH=False
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=150),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
