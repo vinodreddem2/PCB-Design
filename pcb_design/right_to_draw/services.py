@@ -8,7 +8,7 @@ from masters.models import MstComponent, MstSubCategoryTwo, MstDesignOptions, Ms
     MstSectionGroupings, MstVerifierField, MstVerifierField, MstVerifierRules, MstCategory, MstSubCategory, \
     MstConditions
 from .serializers import SectionGroupingsSerializer,SubCategoryTwoSerializer, CADDesignTemplatesSerializer, \
-    SectionRulesSerializer, MstVerifierFieldSerializer, CADVerifierTemplateSerializer
+    SectionRulesSerializer, MstVerifierFieldSerializer, CADVerifierTemplateSerializer,CADApproverTemplateSerializer
 from django.http import Http404
 from django.core.exceptions import ObjectDoesNotExist
 from . import right_to_draw_logs
@@ -245,7 +245,7 @@ def create_cad_verifier_template(data, user):
         return None, serializer.errors
 
 
-def condition_operators(condition, target_value):
+def condition_operators(condition, target_value):    
     is_deviated = False
     if condition.comparison_operator == 'range':
         if not (float(target_value) >= condition.comparison_min_value  and \
@@ -269,48 +269,54 @@ def condition_operators(condition, target_value):
     return is_deviated
 
 
-def check_conditions(sub_category, pcb_specifications):    
+def check_conditions(sub_category, pcb_specifications_inp):
+    pcb_specifications = {int(k):v for k, v in pcb_specifications_inp.items()}    
     conditions = MstConditions.objects.filter(subcategory=sub_category.id)    
     is_deviated = False
     right_to_draw_logs.info(f"Checking conditions for sub_category: {sub_category.name}, conditions: {len(conditions)}")
     # Check for condition operator and comparison
     for condition in conditions:
         right_to_draw_logs.info(f"Checking conditions for sub_category: {sub_category.name}, condition Variable : {condition.condition_variable} & Compare Variable {condition.comparison_variable}")
-        if condition.condition_variable == 'B14 size':
-            b14_size_id = MstCategory.objects.get(category_name='B14 size').id
+        if condition.condition_variable == 'B14 Size':            
+            b14_size_id = MstCategory.objects.get(category_name='B14 Size').id
             selected_val = pcb_specifications.get(b14_size_id)
-            is_condition_satisfied = False
-            target_val = None
-            if condition.comparison_variable == 'Dielectric material thickness':
-                dielectric_material_thickness_id = MstCategory.objects.get(category_name='Dielectric material thickness').id
-                target_val = pcb_specifications.get(dielectric_material_thickness_id)
+            if  selected_val:
+                selected_val = float(selected_val)            
+                is_condition_satisfied = False
+                target_val = None
+                # It is Dielectric thickness
+                if condition.comparison_variable == 'Dielectric Thickness':
+                    dielectric_material_thickness_id = MstCategory.objects.get(category_name='Dielectric Thickness').id
+                    target_val = pcb_specifications.get(dielectric_material_thickness_id)
+                    
+                right_to_draw_logs.info(f"Selected Value is : {selected_val} and Target Value is {target_val}")
+                if target_val:                
+                    if condition.condition_operator == 'range':
+                        if selected_val >= condition.condition_min_value and \
+                            selected_val < condition.condition_max_value:                    
+                            is_condition_satisfied = True                        
+                    elif condition.condition_operator == 'gte':      
+                        if selected_val >= condition.condition_max_value:
+                            is_condition_satisfied = True                        
 
-            if target_val:
-                if condition.condition_operator == 'range':
-                    if float(selected_val) >= condition.condition_min_value and \
-                        float(selected_val) < condition.condition_max_value:                    
-                        is_condition_satisfied = True                        
-                elif condition.condition_operator == 'gte':      
-                    if float(selected_val) >= condition.condition_max_value:
-                        is_condition_satisfied = True                        
-
-                elif condition.condition_operator == 'lte':
-                    if float(selected_val) <= condition.condition_min_value:
-                        is_condition_satisfied = True
-                elif condition.condition_operator == 'gt':
-                    if float(selected_val) > condition.condition_max_value:
-                        is_condition_satisfied = True
-                elif condition.condition_operator == 'lt':
-                    if float(selected_val) < condition.condition_min_value:
-                        is_condition_satisfied = True
-                elif condition.condition_operator == 'eq':
-                    if float(selected_val) == condition.condition_min_value:
-                        is_condition_satisfied = True
-            else:
-                continue
-
-            if is_condition_satisfied:
-                is_deviated = condition_operators(condition, target_val)
+                    elif condition.condition_operator == 'lte':
+                        if selected_val <= condition.condition_min_value:
+                            is_condition_satisfied = True
+                    elif condition.condition_operator == 'gt':
+                        if selected_val > condition.condition_max_value:
+                            is_condition_satisfied = True
+                    elif condition.condition_operator == 'lt':
+                        if selected_val < condition.condition_min_value:
+                            is_condition_satisfied = True
+                    elif condition.condition_operator == 'eq':
+                        if selected_val == condition.condition_min_value:
+                            is_condition_satisfied = True
+                else:
+                    continue
+                
+                right_to_draw_logs.info(f"Is Basic Condition Satisfied {is_condition_satisfied}")
+                if is_condition_satisfied:
+                    is_deviated = condition_operators(condition, target_val)
             if is_deviated:
                 break
     
@@ -352,12 +358,13 @@ def compare_verifier_data_with_design_data(data):
         right_to_draw_logs.error(f"No matching CADDesignTemplate found for Verifier Template {log_str}")
         return {}       
     
-    pcb_specifications_str = template.pcb_specifications 
-    pcb_specifications = {int(k):int(v) for k, v in pcb_specifications_str.items()}
+    pcb_specifications_d = template.pcb_specifications 
+    pcb_specifications = {int(k):int(v) for k, v in pcb_specifications_d.items()}
     
-    for category_id, selected_sub_category_id in design_specifications_data.items():        
-        category_id = int(category_id)
-        selected_sub_category_id = int(selected_sub_category_id)
+    # Looping Each record from the verfier template
+    # Here B14 Size and Dielectric Thickness is going to be the Text Boxes
+    for category_id, selected_sub_category_id in design_specifications_data.items():
+        category_id = int(category_id)        
         try:
             category = MstCategory.objects.get(id=category_id)
         except ObjectDoesNotExist as ex:
@@ -372,16 +379,24 @@ def compare_verifier_data_with_design_data(data):
             }
             design_verification_res.append(deviation_result)
             continue
-        
-        # For Dielectric Thickness, The Verifer enter the value manually Instead of selecting from Drop Down
+        right_to_draw_logs.info(f"Design Verifiation started for : {category.category_name.strip()} -- Value Selected {selected_sub_category_id}")   
+        # For Dielectric Thickness, The Verifer enter the value manually Entered Value Instead 
+        # of selecting from Drop Down
         if category.category_name.strip() == 'Dielectric Thickness':
             right_to_draw_logs.info(f"Validating the Dielectric Thickness category value {selected_sub_category_id}")
             selected_val = float(selected_sub_category_id)
+            
+            # Value should match with the value selected in Design Template
+            # Steps to Check:
+            # Get the Sub-Category Id of selected in Design Template
+            # Get the Value of the Sub-Category from Name column
+            # Compare the Both the values Should be match
             if category_id in pcb_specifications:
+                right_to_draw_logs.info(f"Dielectric Thickness Present in the Design Template {category_id}")
                 dielectric_thickness_sub_category = pcb_specifications.get(category_id)
-                sub_category = MstSubCategory.objects.get(id=selected_sub_category_id)
-                val = float(sub_category.name.strip('"'))
-                if val != selected_val:
+                sub_category = MstSubCategory.objects.get(id=dielectric_thickness_sub_category)
+                design_val = float(sub_category.name.strip('"'))
+                if design_val != selected_val:
                     is_deviated = True
 
                 deviation_result = {
@@ -394,11 +409,12 @@ def compare_verifier_data_with_design_data(data):
                 design_verification_res.append(deviation_result)
                 right_to_draw_logs.info(f"The Dielectric Thickness result for {selected_sub_category_id}, component_id: {component_id} is {is_deviated}")
                 continue
-                
+        elif  category.category_name.strip() == 'B14 Size':
+            continue
 
         else:
             try:
-                sub_category = MstSubCategory.objects.get(id=selected_sub_category_id)
+                sub_category = MstSubCategory.objects.get(id=int(selected_sub_category_id))
             except ObjectDoesNotExist:
                 right_to_draw_logs.info(f"Design Verifications - Invalid Sub Category Id submitted: {selected_sub_category_id} for Category Id{category_id} & component_id: {component_id}")                
                 deviation_result = {
@@ -411,7 +427,7 @@ def compare_verifier_data_with_design_data(data):
                 design_verification_res.append(deviation_result)
                 continue                
             if category_id in pcb_specifications:            
-                if pcb_specifications.get(category_id) != selected_sub_category_id:                
+                if pcb_specifications.get(category_id) != int(selected_sub_category_id):
                     is_deviated = True                
                 else:
                     is_deviated = False                    
@@ -419,7 +435,7 @@ def compare_verifier_data_with_design_data(data):
                 is_deviated = False
 
             if MstConditions.objects.filter(subcategory=sub_category.pk).exists():
-                is_deviated = check_conditions(sub_category, pcb_specifications)
+                is_deviated = check_conditions(sub_category, design_specifications_data)
 
             right_to_draw_logs.info(f"Design Verifications - Category Id: {category_id}, is_deviated: {is_deviated}")
             deviation_result = {
@@ -557,3 +573,40 @@ def get_verifier_record(request_data):
     }
     right_to_draw_logs.info(f"Response data prepared for the queried verifier record")
     return response_data
+
+
+def save_approver_results(data, user):
+    try:
+        template_data = {
+            "opp_number": data.get("oppNumber"),
+            "opu_number": data.get("opuNumber"),
+            "edu_number": data.get("eduNumber"),
+            "model_name": data.get("modelName"),
+            "part_number": data.get("partNumber"),
+            "revision_number": data.get("revisionNumber"),
+            "component_Id":data.get('component'),
+            "pcb_specifications": data.get("componentSpecifications", {}),
+            "approver_data": data.get("approverQueryData", {}),
+            "status": data.get("status"),
+            "comments": data.get("comments"),
+            "created_by": user.id,
+            "updated_by": user.id
+        }
+        serializer = CADApproverTemplateSerializer(data=template_data)
+
+        log_str = f"for component_id: {data.get('component')}, Opp Number {data.get('oppNumber')}, \
+                    Opu Number {data.get('opuNumber')}, Edu Number {data.get('eduNumber')}, Model Name {data.get('modelName')}, \
+                    Part Number {data.get('partNumber')}, Revision Number {data.get('revisionNumber')}"
+        
+        if serializer.is_valid():        
+            template = serializer.save()
+            return template, None
+            
+        else:
+            right_to_draw_logs.error(f"Error Saving in Approver Template {log_str} -- Error is {serializer.errors}")
+            right_to_draw_logs.info(f"Error Saving in Approver Template {log_str} -- Error is {serializer.errors}")        
+            return None, serializer.errors
+    except Exception as ex:
+        right_to_draw_logs.error(f"An error occurred while saving approver template: {str(ex)}")
+        right_to_draw_logs.info(f"An error occurred while saving approver template: {str(ex)}")
+        return None, str(ex)

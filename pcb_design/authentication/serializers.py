@@ -35,6 +35,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({"password": "Password fields didn't match."})
 
+        if 'role' in attrs:
+            roles = attrs['role'].split(',')
+            attrs['role'] = [role.strip() for role in roles]
+
         return attrs
 
     def create(self, validated_data):
@@ -44,13 +48,21 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         
         user.set_password(validated_data['password'])
-        role = self.context.get('role', 'CADesigner')
-        print("vinod role is ", role)
-        if role not in valid_roles:
-            role = 'CADesigner'
-        user.role = role
-        group, created = Group.objects.get_or_create(name=role)
+        roles = self.context.get('role', 'CADesigner')
+        if isinstance(role, str):
+            roles = [roles]
+        
+        is_valid_role = False 
+        for role in roles:
+            print("vinod role is ", role)
+            if role in valid_roles:
+                is_valid_role = True                
+                user.role = role
+                group, created = Group.objects.get_or_create(name=role)
 
+        if not is_valid_role:
+            role = 'CADesigner'
+            group, created = Group.objects.get_or_create(name=role)            
         # Assign the user to the group
         user.groups.add(group)
         user.save()

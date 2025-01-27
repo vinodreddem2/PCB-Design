@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from .models import MstComponent
-from .models import CADDesignTemplates, CADVerifierTemplates
+from .models import CADDesignTemplates, CADVerifierTemplates,CADApproverTemplates
 from masters.models import MstSubCategory,MstCategory, MstSectionRules, MstSectionGroupings,MstSubCategoryTwo,\
     MstVerifierField
 
@@ -117,4 +117,9 @@ class MstVerifierFieldSerializer(serializers.ModelSerializer):
 class CADVerifierTemplateSerializer(serializers.ModelSerializer):       
     class Meta:
         model = CADVerifierTemplates
+        fields = '__all__'
+
+class CADApproverTemplateSerializer(serializers.ModelSerializer):       
+    class Meta:
+        model = CADApproverTemplates
         fields = '__all__'

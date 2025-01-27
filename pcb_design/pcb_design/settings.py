@@ -62,6 +62,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'middleware.current_user_middleware.CurrentUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -101,6 +102,7 @@ WSGI_APPLICATION = 'pcb_design.wsgi.application'
 # DATABASES['default']['OPTIONS'] = {
 #     'sslmode': 'require',  # Ensure the connection is over SSL
 # }
+
 DATABASES = {}
 
 DATABASE_URL = os.getenv("DATABASE_URL", "")
@@ -122,7 +124,7 @@ if DATABASE_URL:
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'mssql',
-#         'NAME': os.getenv('DB_NAME', 'PCB_NEW5'),
+#         'NAME': os.getenv('DB_NAME', 'PCB'),
 #         'USER': os.getenv('DB_USER', 'admin'),
 #         'PASSWORD': os.getenv('DB_PASSWORD', 'Server.2'),
 #         'HOST': os.getenv('DB_HOST', 'localhost\SQLEXPRESS'),
@@ -135,6 +137,7 @@ if DATABASE_URL:
 #         },
 #     },
 # }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

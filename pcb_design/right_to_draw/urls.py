@@ -2,8 +2,8 @@ from django.urls import path
 
 from .views import ComponentAPIView, SubCategoryTwoAPIView,\
     CADDesignTemplatesAPIView, DesignOptionAPIView,DesignRuleAPIView, \
-        CADVerifierTemplateCreateAPIView, MstVerifierFieldFilterAPIView, CADVerifierTemplateCreateAPIView,\
-        MstVerifierFieldResultAPIView
+        CADVerifierTemplateCreateAPIView, MstVerifierFieldFilterAPIView, \
+        MstVerifierFieldResultAPIView, ApproverAPIView, CheckDesignerAndVerifierRecordAPIView
 
 urlpatterns = [
     # Pull ALl the categories and Sub Categories for the Given Component
@@ -22,5 +22,9 @@ urlpatterns = [
     # Save the Verifier Templates
     path('verifier-templates/', CADVerifierTemplateCreateAPIView.as_view(), name='verifier-templates'),
     # Verify result screen 
-    path('verify-results/', MstVerifierFieldResultAPIView.as_view(), name='verify-results')
+    path('verify-results/', MstVerifierFieldResultAPIView.as_view(), name='verify-results'),    
+    # Post the Approver Template
+    path('approver-template/',ApproverAPIView.as_view(),name='approver-templates'),
+    # Check for the Verfier and Approver paths     
+    path('check-template/', CheckDesignerAndVerifierRecordAPIView.as_view(), name='check-apprvoer-record'),
 ]

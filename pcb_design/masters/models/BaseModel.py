@@ -1,5 +1,8 @@
 from django.db import models
 from authentication.models import CustomUser
+from utility.get_current_user import get_current_user
+
+
 
 class BaseModel(models.Model):
     created_by = models.ForeignKey(CustomUser, on_delete=models.DO_NOTHING,
@@ -13,3 +16,11 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True
+
+    def save(self, *args, **kwargs):
+        user = get_current_user()
+        if user and not self.pk:  # Set created_by for new records
+            self.created_by = user
+        if user:  # Set updated_by for both new and updated records
+            self.updated_by = user
+        super().save(*args, **kwargs)
