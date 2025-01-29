@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from drf_yasg import openapi
 from authentication.custom_permissions import IsAuthorized
 from authentication.custom_authentication import CustomJWTAuthentication
-from .models import CADDesignTemplates, CADVerifierTemplates
+from .models import CADDesignTemplates, CADVerifierTemplates, CADApproverTemplates
 from .services import get_categories_for_component_id, create_cad_template,\
     get_sub_categories_two_for_subcategory_id,  get_design_options_for_sub_category,get_design_rules_for_design_option,\
     get_verifier_fields_by_params, create_cad_verifier_template, compare_verifier_data_with_rules_and_designs, get_verifier_record, \
@@ -434,12 +434,13 @@ class CheckDesignerAndVerifierRecordAPIView(APIView):
         try:
             designer_record = CADDesignTemplates.objects.filter(**data).exists()
             verifier_record = CADVerifierTemplates.objects.filter(**data).exists()
-            if designer_record and verifier_record:
-                return Response({"designer_exists": True, "verifier_exists": True}, status=status.HTTP_200_OK)
-            elif designer_record:
-                return Response({"designer_exists": True, "verifier_exists": False}, status=status.HTTP_200_OK)
-            else:
-                return Response({"designer_exists": False, "verifier_exists": False}, status=status.HTTP_200_OK)
+            approver_record = CADApproverTemplates.objects.filter(**data).exists()
+
+
+            return Response({"designer_exists": True if designer_record else False,
+                            "verifier_exists": True if verifier_record else False,
+                            "approver_exists": True if approver_record else False}, 
+                            status=status.HTTP_200_OK)
         except Exception as e:
             error_log = f"Exception Occurred in Check Designer and Verifier Record API View -- user: {request.user} -- {str(e)} : for {log_Str}"
             right_to_draw_logs.info(error_log)
