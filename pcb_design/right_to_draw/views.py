@@ -63,7 +63,6 @@ class SubCategoryTwoAPIView(APIView):
             return Response({"error": f"Exception Occurred {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-
 class DesignOptionAPIView(APIView):
     permission_classes = [IsAuthorized]
     authentication_classes = [CustomJWTAuthentication]
@@ -84,7 +83,6 @@ class DesignOptionAPIView(APIView):
             right_to_draw_logs.info(error_log)
             right_to_draw_logs.error(error_log)
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 
 class DesignRuleAPIView(APIView):
@@ -268,7 +266,6 @@ class CADVerifierTemplateCreateAPIView(APIView):
             return Response({"error": f"Exception occurred: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-
 class MstVerifierFieldResultAPIView(APIView):
     permission_classes = [IsAuthorized]
     authentication_classes = [CustomJWTAuthentication]
@@ -306,7 +303,6 @@ class MstVerifierFieldResultAPIView(APIView):
             right_to_draw_logs.info(error_log)
             right_to_draw_logs.error(error_log)
             return Response({"error": f"Exception occurred: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 
 class ApproverAPIView(APIView):
@@ -446,3 +442,39 @@ class CheckDesignerAndVerifierRecordAPIView(APIView):
             right_to_draw_logs.info(error_log)
             right_to_draw_logs.error(error_log)
             return Response({"error": f"Exception occurred: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class UserCreatedTemplatesView(APIView):
+    permission_classes = [IsAuthorized]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+
+        # Get all the records created by the logged-in user
+        design_templates = CADDesignTemplates.objects.filter(created_by=user)
+        verifier_templates = CADVerifierTemplates.objects.filter(created_by=user)
+        approver_templates = CADApproverTemplates.objects.filter(created_by=user)
+
+        # Combine all the records (or return them in different responses as needed)
+        data = {
+            'design_templates': self.get_template_data(design_templates),
+            'verifier_templates': self.get_template_data(verifier_templates),
+            'approver_templates': self.get_template_data(approver_templates),
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    def get_template_data(self, templates):
+        """Helper method to format the response data."""
+        return [
+            {
+                'oppNumber': template.opp_number,
+                'opuNumber': template.opu_number,
+                'eduNumber': template.edu_number,
+                'modelName': template.model_name,
+                'partNumber': template.part_number,
+                'revisionNumber': template.revision_number,
+                'component': template.component_Id.id,
+            }
+            for template in templates
+        ]

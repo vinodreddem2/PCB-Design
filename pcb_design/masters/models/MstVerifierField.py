@@ -18,7 +18,7 @@ class MstVerifierField(BaseModel):
     class Meta:        
         verbose_name = 'Verifier Field'
         verbose_name_plural = 'Verifier Fields'
-
+        unique_together = ('component', 'category', 'field_name')
 
     def __str__(self):
         return self.field_name

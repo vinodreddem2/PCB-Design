@@ -49,22 +49,21 @@ class RegisterSerializer(serializers.ModelSerializer):
         
         user.set_password(validated_data['password'])
         roles = self.context.get('role', 'CADesigner')
-        if isinstance(role, str):
+        if isinstance(roles, str):
             roles = [roles]
         
-        is_valid_role = False 
+        is_valid_role_added = False 
         for role in roles:
-            print("vinod role is ", role)
             if role in valid_roles:
-                is_valid_role = True                
+                is_valid_role_added = True                
                 user.role = role
                 group, created = Group.objects.get_or_create(name=role)
-
-        if not is_valid_role:
+                user.groups.add(group)
+        if not is_valid_role_added:
             role = 'CADesigner'
-            group, created = Group.objects.get_or_create(name=role)            
-        # Assign the user to the group
-        user.groups.add(group)
+            group, created = Group.objects.get_or_create(name=role)
+            user.groups.add(group)           
+        
         user.save()
         
         return user

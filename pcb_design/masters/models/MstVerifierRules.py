@@ -15,6 +15,7 @@ class MstVerifierRules(BaseModel):
     class Meta:        
         verbose_name = 'Verifier Rule'
         verbose_name_plural = 'Verifier Rules'
+        unique_together = ('verifier_field', 'design_doc', 'rule_number')
 
     def __str__(self):
         return f"Rule {self.rule_number} for {self.verifier_field.field_name}"

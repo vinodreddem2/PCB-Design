@@ -25,7 +25,6 @@ class LoginView(APIView):
     authentication_classes = [] 
 
     def post(self, request):
-        print('Inside teh Log in View Post')
         email = request.data.get('email')
         password = request.data.get('password')
         user = authenticate(email=email, password=password)                

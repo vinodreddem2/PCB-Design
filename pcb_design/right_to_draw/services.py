@@ -572,45 +572,76 @@ def compare_verifier_data_with_design_data(data):
     return design_verification_res
 
 
-def comapre_verfier_data_with_rules(verifier_id, field_value):    
+def get_dielectric_material_selected_value(data):
+    die_material_val = None
+    for category_id, selected_sub_category_id in data.items():
+        try:
+            category_id = int(category_id)        
+            try:
+                category = MstCategory.objects.get(id=category_id)
+            except ObjectDoesNotExist as ex:
+                continue
+            if category.category_name.strip().lower() == 'dielectric material':
+                sub_category = MstSubCategory.objects.get(id=selected_sub_category_id)
+                die_material_val = sub_category.name
+                break
+        except Exception as ex:
+            right_to_draw_logs.info("Unable to fetch the Dielectric Material Value")
+    return die_material_val
+
+
+def comapre_verfier_data_with_rules(verifier_id, field_value, design_data):    
     try:
         right_to_draw_logs.info(f"Compare verifier data with rules for verifier_id: {verifier_id}, field_value: {field_value}") 
         verifier_field = MstVerifierField.objects.get(id=int(verifier_id))        
         verifier_rule = MstVerifierRules.objects.get(verifier_field=verifier_field.pk)        
-        rule_number = verifier_rule.rule_number
-        design_doc = verifier_rule.design_doc                
-        section_rule = MstSectionRules.objects.get(rule_number=rule_number, design_doc=design_doc)
-        try:        
-            min_value = float(section_rule.min_value) if section_rule.min_value else None                   
-        except Exception as e:
-            min_value = None
-
-        try:                    
-            max_value = float(section_rule.max_value) if section_rule.max_value else None        
-        except Exception as e:
-            max_value = None
-
-
+        rules = verifier_rule.rule_number
+        rule_numbers = rules.split(',')
         is_deviation = False
-        if (min_value is not None and field_value < min_value) or (max_value is not None and field_value > max_value):
-            is_deviation = True
+        for rule_number in rule_numbers:
+            if verifier_field.field_name.strip() == 'Mounting of Transformers':
+                die_material_val =  get_dielectric_material_selected_value(design_data)
+                # For 'Mounting of Transformers' If Dielectric Material is 'Rogers: RO4350B'
+                # Then only '4.11.2' rule needs to execute else Do not execute
+                # Vice Versa.
+                if die_material_val == 'Rogers: RO4350B' and rule_number != '4.11.2':
+                    continue
+                if die_material_val != 'Rogers: RO4350B' and rule_number == '4.11.2':
+                    continue
+            rule_number = rule_number.strip()
+            design_doc = verifier_rule.design_doc                
+            section_rule = MstSectionRules.objects.get(rule_number=rule_number, design_doc=design_doc)
+            try:        
+                min_value = float(section_rule.min_value) if section_rule.min_value else None                   
+            except Exception as e:
+                min_value = None
+
+            try:                    
+                max_value = float(section_rule.max_value) if section_rule.max_value else None        
+            except Exception as e:
+                max_value = None
+            
+            if (min_value is not None and field_value < min_value) or (max_value is not None and field_value > max_value):
+                is_deviation = True
+                break
         
         return is_deviation
 
     except ObjectDoesNotExist as ex:
-        right_to_draw_logs.info(f"Verifier Field or Rule not found: {str(ex)}")
-        right_to_draw_logs.error(f"Verifier Field or Rule not found: {str(ex)}")
+        right_to_draw_logs.info(f"Verifier Field or Rule not found for verifier id {verifier_id}: {str(ex)}")
+        right_to_draw_logs.error(f"Verifier Field or Rule not found for verifier id {verifier_id}: {str(ex)}")
         return False
     except Exception as ex:
-        right_to_draw_logs.error(f"An error occurred while comparing verifier data with rules: {str(ex)}")
-        right_to_draw_logs.info(f"An error occurred while comparing verifier data with rules: {str(ex)}")
+        right_to_draw_logs.error(f"An error occurred while comparing verifier data with rules for verifier id {verifier_id}: {str(ex)}")
+        right_to_draw_logs.info(f"An error occurred while comparing verifier data with rules for verifier id {verifier_id}: {str(ex)}")
         return False
 
-def comapre_verfier_data(verified_data):
+
+def comapre_verfier_data(verified_data, design_data):
     verifier_res = []
     for id, val in verified_data.items():
         val = float(val)
-        is_deviated = comapre_verfier_data_with_rules(id, val)
+        is_deviated = comapre_verfier_data_with_rules(id, val, design_data)
         verifier_field = MstVerifierField.objects.get(id=id)
         name = verifier_field.name
         data = {'id' :id, 'name':name, 'value':val, 'is_deviated':is_deviated}
@@ -637,7 +668,7 @@ def compare_verifier_data_with_rules_and_designs(data):
     res['verify_design_fields_data']= design_specification_data
 
     right_to_draw_logs.info(f"Compare verifier data with rules and designs for {result_string}")    
-    verified_rule_data = comapre_verfier_data(data.get("verifierQueryData"))
+    verified_rule_data = comapre_verfier_data(data.get("verifierQueryData"), data.get('componentSpecifications'))
     res['verified_query_data'] = verified_rule_data
 
 

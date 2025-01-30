@@ -18,6 +18,7 @@ class MstSectionGroupings(BaseModel):
     class Meta:
         verbose_name = 'Section Group'
         verbose_name_plural = 'Section Groups'
+        unique_together = ('design_doc', 'section_name')
 
     def __str__(self):
         return f"{self.section_name}-{self.design_doc}"
