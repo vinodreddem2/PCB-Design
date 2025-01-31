@@ -15,9 +15,9 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     is_logged_out = models.BooleanField(default=True)
     role = models.CharField(max_length=20, choices=VALID_ROLES, default='CADesigner', blank=True, null=True)
-
+    full_name = models.CharField(max_length=255)
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ['full_name']
 
     objects = CustomUserManager()
 

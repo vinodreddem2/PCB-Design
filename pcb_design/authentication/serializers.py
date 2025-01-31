@@ -26,10 +26,11 @@ class RegisterSerializer(serializers.ModelSerializer):
     )
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
+    full_name = serializers.CharField(required=True) 
   
     class Meta:
         model = CustomUser
-        fields = ( 'password', 'password2', 'email')
+        fields = ( 'password', 'password2', 'email', 'full_name')
   
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
@@ -43,10 +44,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = CustomUser.objects.create(
-            email=validated_data['email'],
+            email=validated_data['email']
         )
-
-        
         user.set_password(validated_data['password'])
         roles = self.context.get('role', 'CADesigner')
         if isinstance(roles, str):
@@ -56,9 +55,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         for role in roles:
             if role in valid_roles:
                 is_valid_role_added = True                
-                user.role = role
+                
                 group, created = Group.objects.get_or_create(name=role)
                 user.groups.add(group)
+        user.role = ", ".join(roles)
+        user.full_name = validated_data['full_name']
         if not is_valid_role_added:
             role = 'CADesigner'
             group, created = Group.objects.get_or_create(name=role)

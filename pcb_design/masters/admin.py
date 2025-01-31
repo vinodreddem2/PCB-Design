@@ -8,7 +8,6 @@ from .resources import MstCategoryResource, MstComponentResource, MstSubCategory
 from import_export.admin import ImportExportModelAdmin, ExportActionModelAdmin
 
 
-
 class MstComponentAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     resource_classes = [MstComponentResource]
     list_display = ('id', 'component_name', 'description', 'created_by','updated_by')  
@@ -84,9 +83,12 @@ class MstConditionsAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 
 class MstVerifierFieldAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     resource_classes = [MstVerifierFieldResource]
-    list_display = ('id', 'component', 'category', 'field_name', 'name',)
+    list_display = ('id', 'component', 'category', 'field_name', 'sub_category_summary')
     search_fields = ( 'component__component_name', 'category__category_name', 'field_name',)
     list_filter = ('component', 'category')
+
+    def sub_category_summary(self, obj):
+        return ", ".join([str(sub) for sub in obj.sub_category.all()])
 
 class MstVerifierRulesAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     resource_classes = [MstVerifierRulesResource]

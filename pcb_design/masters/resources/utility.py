@@ -2,6 +2,7 @@ from import_export.widgets import ForeignKeyWidget
 from django.utils import timezone
 from import_export.widgets import ForeignKeyWidget, ManyToManyWidget
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import models
 
 
 class CustomForeignKeyWidget(ForeignKeyWidget):
@@ -54,4 +55,13 @@ def before_save_instance_update_create_date(instance, model):
             existing_instance.created_at else timezone.now()
     except Exception as ex:
         instance.created_at = timezone.now()
+
+    # Strip spaces for all CharField and TextField fields
+    for field in instance._meta.fields:
+        if isinstance(field, (models.CharField, models.TextField)):
+            value = getattr(instance, field.name)
+            if isinstance(value, str):
+                # Remove leading and trailing spaces from string fields
+                setattr(instance, field.name, value.strip())
+
     return instance

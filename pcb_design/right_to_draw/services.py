@@ -609,22 +609,23 @@ def comapre_verfier_data_with_rules(verifier_id, field_value, design_data):
                 if die_material_val != 'Rogers: RO4350B' and rule_number == '4.11.2':
                     continue
             rule_number = rule_number.strip()
-            design_doc = verifier_rule.design_doc                
+            design_doc = verifier_rule.design_doc
+            design_doc = design_doc.strip()  
             section_rule = MstSectionRules.objects.get(rule_number=rule_number, design_doc=design_doc)
             try:        
                 min_value = float(section_rule.min_value) if section_rule.min_value else None                   
             except Exception as e:
                 min_value = None
 
+
             try:                    
                 max_value = float(section_rule.max_value) if section_rule.max_value else None        
             except Exception as e:
                 max_value = None
-            
+         
             if (min_value is not None and field_value < min_value) or (max_value is not None and field_value > max_value):
                 is_deviation = True
                 break
-        
         return is_deviation
 
     except ObjectDoesNotExist as ex:
