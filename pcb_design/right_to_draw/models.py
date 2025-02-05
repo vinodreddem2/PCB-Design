@@ -14,6 +14,7 @@ class CADDesignTemplates(BaseModel):
                                      db_column='COMPONENT_ID')
     pcb_specifications = models.JSONField(db_column='PCB_SPECIFICATIONS')
     smt_design_options = models.JSONField(db_column='SMT_DESIGN_OPTIONS')
+    secondary_sub_level = models.JSONField(db_column='SECONDARY_SUB_LEVEL',null=True, blank=True)
     
     class Meta:
         unique_together = ( 'opp_number', 'opu_number', 'edu_number', 'model_name', 'part_number', 'revision_number')

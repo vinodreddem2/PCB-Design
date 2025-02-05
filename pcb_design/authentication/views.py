@@ -4,9 +4,10 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from rest_framework import status
 
+
 from .custom_permissions import IsAuthorized
 from .serializers import RegisterSerializer
-
+from right_to_draw.services import reset_user_password
 
 class UserRegistrationView(APIView):
     permission_classes = [IsAuthorized]
@@ -53,3 +54,21 @@ class LogoutView(APIView):
         except Exception as e:
             print(e)
             return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+
+class ForgetPasswordView(APIView):
+
+    def post(self,request):
+        try:
+            
+            data= request.data
+            
+            response = reset_user_password(data)
+            
+            if isinstance(response, dict) and "errors" in response:
+                return Response(
+                    response, status=response.get("status", status.HTTP_400_BAD_REQUEST)
+                )
+            
+            return Response(response.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": f"Exception occurred: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

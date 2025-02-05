@@ -6,6 +6,7 @@ from masters.models import MstSubCategory,MstCategory, MstSectionRules, MstSecti
     MstVerifierField
 
 
+
 class ComponentSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -123,3 +124,4 @@ class CADApproverTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = CADApproverTemplates
         fields = '__all__'
+

@@ -68,3 +68,33 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.save()
         
         return user
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+    password2 = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+
+        email = data.get("email")
+        password = data.get("password")
+        password2 = data.get("password2")
+
+
+        if not CustomUser.objects.filter(email=email).exists():
+            raise serializers.ValidationError({"email": "User with this email does not exist."})
+
+
+        if password != password2:
+            raise serializers.ValidationError({"password": "Passwords do not match."})
+
+        return data
+
+    def save(self):
+
+        email = self.validated_data["email"]
+        password = self.validated_data["password"]
+
+        user = CustomUser.objects.get(email=email)
+        user.set_password(password)  
+        user.save()
