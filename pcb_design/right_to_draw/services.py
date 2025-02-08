@@ -107,7 +107,9 @@ def get_design_options_for_sub_category(sub_category_id):
         
         right_to_draw_logs.info(f"Number of Design Options: {len(result)} for Sub Category ID: {sub_category_id}")
         return result
-
+    
+    except Http404 as ex:
+        raise Http404("Design Options not found for the given Sub Category ID.")
     except Exception as e:
         error_log = f"An error occurred while fetching design options: {str(e)}"
         right_to_draw_logs.info(error_log)
