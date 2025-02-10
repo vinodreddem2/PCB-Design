@@ -86,7 +86,6 @@ def get_sub_categories_two_for_subcategory_id(sub_category_id):
         right_to_draw_logs.error(error_log)
         raise HttpResponseServerError("Exception Occurred for fetching the Sub Categories Level Two.")
     
-
 def get_design_options_for_sub_category(sub_category_id):
     right_to_draw_logs.info(f"Get design options for sub_category_id: {sub_category_id}")
     try:     
@@ -107,7 +106,6 @@ def get_design_options_for_sub_category(sub_category_id):
         
         right_to_draw_logs.info(f"Number of Design Options: {len(result)} for Sub Category ID: {sub_category_id}")
         return result
-    
     except Http404 as ex:
         raise Http404("Design Options not found for the given Sub Category ID.")
     except Exception as e:
