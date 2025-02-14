@@ -98,3 +98,17 @@ class ForgotPasswordSerializer(serializers.Serializer):
         user = CustomUser.objects.get(email=email)
         user.set_password(password)  
         user.save()
+
+class GetUserSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField()
+    class Meta:
+        model = CustomUser
+        fields = ['id','email', 'role', 'full_name']
+    
+    def get_role(self, obj):        
+        return [group.name for group in obj.groups.all()]
+
+class UpdateUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['full_name']

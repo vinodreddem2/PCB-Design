@@ -3,11 +3,11 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from rest_framework import status
-
-
+from rest_framework.exceptions import ValidationError, NotFound
 from .custom_permissions import IsAuthorized
 from .serializers import RegisterSerializer
-from right_to_draw.services import reset_user_password
+from .services import reset_user_password, get_users, update_user, delete_user
+
 
 class UserRegistrationView(APIView):
     permission_classes = [IsAuthorized]
@@ -62,13 +62,40 @@ class ForgetPasswordView(APIView):
             
             data= request.data
             
-            response = reset_user_password(data)
-            
-            if isinstance(response, dict) and "errors" in response:
-                return Response(
-                    response, status=response.get("status", status.HTTP_400_BAD_REQUEST)
-                )
-            
+            response = reset_user_password(data)            
             return Response(response.data, status=status.HTTP_200_OK)
+        
+        except ValidationError as e:
+            return Response({"error": f"Validation Error: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+        except NotFound as e:
+            return Response({"error": f"User Not Found: {e}"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": f"Exception occurred: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class UserAPIView(APIView):
+    def get(self, request):
+        try:
+            response = get_users()
+            return Response(response, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": f"Exception occurred While Getting the Users: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)    
+    
+    def put(self, request, pk):
+        try:
+            response = update_user(request.data,pk)
+            return Response(response, status=status.HTTP_200_OK)
+        except NotFound as e:
+            return Response({"error": f"User Not Found: {e}"}, status=status.HTTP_404_NOT_FOUND)
+        except ValidationError as e:
+            return Response({"error": f"Validation Error: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": f"Exception occurred While Updating the User: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    def delete(self, request, pk):
+        try:    
+            response = delete_user(pk)
+            return Response(response)
+        except NotFound as e:
+            return Response({"error": f"User Not Found: {e}"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": f"Exception occurred While Deleting the User: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

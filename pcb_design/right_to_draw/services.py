@@ -15,7 +15,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from authentication.models import CustomUser
 from . import right_to_draw_logs
 from rest_framework.exceptions import ValidationError
-from authentication.serializers import ForgotPasswordSerializer 
+from authentication.serializers import ForgotPasswordSerializer,GetUserSerializer,UpdateUserSerializer
+
 
 
 def get_categories_for_component_id(component_id, is_verifier=0):
@@ -768,30 +769,3 @@ def save_approver_results(data, user):
         right_to_draw_logs.error(f"An error occurred while saving approver template: {str(ex)}")
         right_to_draw_logs.info(f"An error occurred while saving approver template: {str(ex)}")
         return None, str(ex)
-
-
-def reset_user_password(data):
-    
-    try:
-        user = CustomUser.objects.get(email=data.get('email'))
-        
-        serializer = ForgotPasswordSerializer(data=data)
-        
-        serializer.is_valid(raise_exception=True)
-        
-        serializer.save()
-
-        return serializer
-    except CustomUser.DoesNotExist:
-        error_log = f"User with email {data.get('email')} does not exist."
-        right_to_draw_logs.info(error_log)
-        right_to_draw_logs.error(error_log)
-        return {"error": "User not found." ,"status":status.HTTP_404_NOT_FOUND}
-    except ValidationError as e:
-        return {"error": e.detail, "status": status.HTTP_400_BAD_REQUEST}
-    except Exception as ex:
-        right_to_draw_logs.error(f"An error occurred while resetting user password: {str(ex)}")
-        right_to_draw_logs.info(f"An error occurred while resetting user password: {str(ex)}")
-        raise HttpResponseServerError(
-            f"An error occurred while fetching class details: {str(ex)}"
-        )
