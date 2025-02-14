@@ -5,11 +5,11 @@ from utility.get_current_user import get_current_user
 
 
 class BaseModel(models.Model):
-    created_by = models.ForeignKey(CustomUser, on_delete=models.DO_NOTHING,
+    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL,
                                    related_name='%(class)s_created_by',
                                    null=True, blank=True, db_column='CREATED_BY')
     created_at = models.DateTimeField(auto_now_add=True, db_column='CREATED_AT')
-    updated_by = models.ForeignKey(CustomUser, on_delete=models.DO_NOTHING,
+    updated_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL,
                                    related_name='%(class)s_updated_by',
                                    null=True, blank=True, db_column='UPDATED_BY')
     updated_at = models.DateTimeField(auto_now=True, db_column='UPDATED_AT')

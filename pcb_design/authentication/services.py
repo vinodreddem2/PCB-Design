@@ -21,7 +21,7 @@ def update_user(data,pk):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return serializer.data
-    except CustomUser.DoesNotExist:
+    except CustomUser.DoesNotExist as ex:
         raise NotFound(ex)
     except ValidationError as e:
         raise ValidationError(e)
@@ -34,7 +34,7 @@ def delete_user(pk):
         user = CustomUser.objects.get(pk=pk)
         user.delete()
         return "User deleted successfully."
-    except CustomUser.DoesNotExist:                
+    except CustomUser.DoesNotExist as ex:                
         raise NotFound(ex)
     except Exception as ex:
         raise ex
