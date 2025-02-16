@@ -56,7 +56,8 @@ class LogoutView(APIView):
             return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
 
 class ForgetPasswordView(APIView):
-
+    permission_classes = [] 
+    authentication_classes = []
     def post(self,request):
         try:
             
