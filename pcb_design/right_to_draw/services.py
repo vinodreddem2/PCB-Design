@@ -171,7 +171,8 @@ def create_cad_template(data, user):
         "smt_design_options": design_options,
         "secondary_sub_level": secondary_sub_level,
         'created_by':user.pk,
-        'updated_by': user.pk
+        'updated_by': user.pk,
+        'remarks': data.get('remarks'),
     }
 
     # Create and validate the serializer
@@ -380,10 +381,6 @@ def check_conditions(sub_category, pcb_specifications_inp):
                 
             if group_deviation_found:
                 break
-        
-        # If group deviated, mark the condition_variable as deviated
-        if atleast_one_conditon_sat_compare:
-            right_to_draw_logs.info(f"Invalid conditons defined in the Conditions table")
         
         if not group_prequisite_met:
             right_to_draw_logs.info(f"Pre-requisite not met for {condition_variable} with comparison {comparison_variable}.")            

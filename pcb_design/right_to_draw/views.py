@@ -161,7 +161,12 @@ class CADDesignTemplatesAPIView(APIView):
                     type=openapi.TYPE_ARRAY,
                     items=openapi.Items(type=openapi.TYPE_STRING),
                     description='Design options (array of strings)'
-                )
+                ),
+                'secondarySubLevel': openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    additional_properties=openapi.Schema(type=openapi.TYPE_STRING, description="Secondary sub level fields")
+                ),
+                'remarks': openapi.Schema(type=openapi.TYPE_STRING, description='Remarks')
             },
             required=['oppNumber', 'opuNumber', 'modelName', 'partNumber', 'component'],
         ),
