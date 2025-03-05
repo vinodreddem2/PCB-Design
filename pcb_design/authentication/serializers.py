@@ -7,6 +7,7 @@ from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
 
 valid_roles = ['Admin', 'CADesigner', 'Approver', 'Verifier']
+from . import authentication_logs
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -33,16 +34,20 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ( 'password', 'password2', 'email', 'full_name')
   
     def validate(self, attrs):
+        authentication_logs.info(f"Register User Request {attrs['email']}")
         if attrs['password'] != attrs['password2']:
+            authentication_logs.error(f"Password fields didn't match. {attrs['email']}")
             raise serializers.ValidationError({"password": "Password fields didn't match."})
 
         if 'role' in attrs:
             roles = attrs['role'].split(',')
             attrs['role'] = [role.strip() for role in roles]
+            authentication_logs.info(f"Role: {attrs['role']}")
 
         return attrs
 
     def create(self, validated_data):
+        authentication_logs.info(f"Register User Request {validated_data['email']}")
         user = CustomUser.objects.create(
             email=validated_data['email']
         )
@@ -58,6 +63,7 @@ class RegisterSerializer(serializers.ModelSerializer):
                 
                 group, created = Group.objects.get_or_create(name=role)
                 user.groups.add(group)
+        
         user.role = ", ".join(roles)
         user.full_name = validated_data['full_name']
         if not is_valid_role_added:
@@ -66,7 +72,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             user.groups.add(group)           
         
         user.save()
-        
+        authentication_logs.info(f"User Registered Successfully: {user.email}")
         return user
 
 class ForgotPasswordSerializer(serializers.Serializer):
