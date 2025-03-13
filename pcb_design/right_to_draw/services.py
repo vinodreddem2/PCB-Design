@@ -491,6 +491,17 @@ def compare_verifier_data_with_design_data(data):
                 # Get the Sub-Category Id of selected in Design Template
                 # Get the Value of the Sub-Category from Name column
                 # Compare the Both the values Should be match
+                if selected_val == 0:                    
+                    deviation_result = {
+                        'categor_id' : category_id,
+                        'name': category.category_name,
+                        'selected_deviation_id': "N/A",
+                        'selected_deviation_name': selected_val,
+                        'is_deviated': False
+                    }
+                    design_verification_res = append_design_response_to_final_response(design_verification_res, deviation_result)            
+                    continue
+                
                 if category_id in design_template_specification_data:
                     right_to_draw_logs.info(f"{category.category_name} Present in the Design Template {category_id}")
                     # Get the selected value during the Design template                
@@ -645,10 +656,13 @@ def comapre_verfier_data(verified_data, design_data):
     verifier_res = []
     for id, val in verified_data.items():
         val = float(val)
-        is_deviated = comapre_verfier_data_with_rules(id, val, design_data)
-        verifier_field = MstVerifierField.objects.get(id=id)
-        name = verifier_field.name
-        data = {'id' :id, 'name':name, 'value':val, 'is_deviated':is_deviated}
+        if val == 0:
+            data = {'id' :id, 'name':name, 'value':val, 'is_deviated':False}
+        else:
+            is_deviated = comapre_verfier_data_with_rules(id, val, design_data)
+            verifier_field = MstVerifierField.objects.get(id=id)
+            name = verifier_field.name
+            data = {'id' :id, 'name':name, 'value':val, 'is_deviated':is_deviated}
         verifier_res.append(data)
     return verifier_res
 

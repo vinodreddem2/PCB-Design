@@ -8,7 +8,7 @@ class MstSectionRules(BaseModel):
     id = models.AutoField(primary_key=True, editable=False, db_column='ID')
     design_doc = models.CharField(max_length=255, db_column='DESIGN_DOC')
     rule_number = models.CharField(max_length=50, db_column='RULE_NUMBER')
-    parameter = models.CharField(max_length=255, db_column='PARAMETER')
+    parameter = models.CharField(max_length=1255, db_column='PARAMETER')
     min_value = models.CharField(max_length=10, blank=True, null=True, db_column='MIN_VALUE')
     max_value = models.CharField(max_length=10, blank=True, null=True, db_column='MAX_VALUE')
     nominal = models.CharField(max_length=10, blank=True, null=True, db_column='NOMINAL')

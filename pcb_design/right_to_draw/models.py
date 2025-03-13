@@ -35,6 +35,7 @@ class CADVerifierTemplates(BaseModel):
                                      db_column='COMPONENT_ID')
     pcb_specifications = models.JSONField(db_column='PCB_SPECIFICATIONS')
     verifier_query_data = models.JSONField(db_column='VERIFIER_QUERY_DATA')
+    remarks = models.TextField( null=True, blank=True, db_column='REMARKS')
     
     class Meta:
         unique_together = ( 'opp_number', 'opu_number', 'edu_number', 'model_name', 'part_number', 'revision_number')
