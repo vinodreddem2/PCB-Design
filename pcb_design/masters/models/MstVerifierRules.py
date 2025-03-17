@@ -10,6 +10,8 @@ class MstVerifierRules(BaseModel):
     verifier_field = models.ForeignKey(MstVerifierField, on_delete=models.CASCADE, db_column='VERIFIER_FIELD_ID')
     design_doc = models.CharField(max_length=255, db_column='DESIGN_DOC')
     rule_number = models.CharField(max_length=50, db_column='RULE_NUMBER')
+    conditional_var = models.CharField(max_length=50, db_column='CONDITIONAL_VAR')
+    value = models.CharField(max_length=10, db_column='VALUE')
     name = AliasField(db_column='RULE_NUMBER', blank=True, null=True, editable=False)
 
     class Meta:        
