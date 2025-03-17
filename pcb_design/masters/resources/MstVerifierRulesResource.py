@@ -10,7 +10,7 @@ class MstVerifierRulesResource(resources.ModelResource):
 
     class Meta:
         model = MstVerifierRules
-        fields = ('id', 'verifier_field', 'design_doc', 'rule_number')
+        fields = ('id', 'verifier_field', 'design_doc', 'rule_number', 'conditional_var', 'value')
         import_id_fields = ('id',)
         primary_key = 'id'
         skip_unchanged = True

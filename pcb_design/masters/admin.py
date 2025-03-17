@@ -92,8 +92,8 @@ class MstVerifierFieldAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 
 class MstVerifierRulesAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     resource_classes = [MstVerifierRulesResource]
-    list_display = ('id', 'verifier_field', 'design_doc', 'rule_number')
-    search_fields = ('design_doc', 'rule_number')
+    list_display = ('id', 'verifier_field', 'design_doc', 'rule_number', 'conditional_var', 'value')
+    search_fields = ('design_doc', 'rule_number', 'conditional_var', 'value')
     list_filter = ('design_doc', 'rule_number')
 
 
