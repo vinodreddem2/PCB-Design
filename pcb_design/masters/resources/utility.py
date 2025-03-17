@@ -59,6 +59,8 @@ def before_save_instance_update_create_date(instance, model):
     # Strip spaces for all CharField and TextField fields
     for field in instance._meta.fields:
         if isinstance(field, (models.CharField, models.TextField)):
+            if field is None:
+                continue
             value = getattr(instance, field.name)
             if isinstance(value, str):
                 # Remove leading and trailing spaces from string fields

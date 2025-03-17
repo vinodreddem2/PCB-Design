@@ -294,7 +294,7 @@ def condition_operators(condition, target_value):
 
 def check_conditions(sub_category, category, pcb_specifications_inp):
     res = []
-    pcb_specifications = {int(k):v for k, v in pcb_specifications_inp.items()}    
+    pcb_specifications = {int(k):id(v) for k, v in pcb_specifications_inp.items()}    
     conditions = MstConditions.objects.filter(Q(category=category.pk) | Q(subcategory=sub_category.pk))  
     right_to_draw_logs.info(f"Checking conditions for sub_category: {sub_category.name}, conditions: {len(conditions)}")
     
@@ -332,10 +332,22 @@ def check_conditions(sub_category, category, pcb_specifications_inp):
             res.append(deviation_result)
             continue
 
-        
         selected_val = pcb_specifications.get(condition_id)
         target_val = pcb_specifications.get(comparision_id)            
 
+        # For B14 Size and Dielectric Thickness we are having the Text Boxes so we need to convert the values to float
+        # For B11 and B17 the values are selected from drop down, so in the given data we are going to have the ids
+        # of the drop down values, so we need to fetch from the the MstSubCategory table and get the name and then convert
+        # to float
+        if condition_variable.strip().lower() == 'b14 size':
+            selected_val = float(selected_val)
+        elif comparison_variable.strip().lower() == 'dielectric thickness':
+            target_val = float(target_val)
+        else:
+            selected_val = MstSubCategory.objects.get(id=selected_val).name
+            target_val = MstSubCategory.objects.get(id=target_val).name
+            selected_val = float(selected_val)
+            target_val = float(target_val)            
 
         if not selected_val:
             right_to_draw_logs.info(f"{condition_variable} Value does not exists in the input for Condition Check")

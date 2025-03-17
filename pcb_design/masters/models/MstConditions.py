@@ -24,11 +24,11 @@ class MstConditions(BaseModel):
     subcategory = models.ForeignKey(MstSubCategory, on_delete=models.CASCADE, db_column='SUB_CATEGORY_ID', null=True, blank=True)
     condition_variable = models.CharField(max_length=255, db_column='CONDITION_VARIABLE')
     condition_operator = models.CharField(max_length=10, choices=CONDITIONAL_CHOICES, db_column='CONDITION_OPERATOR', null=True, blank=True)
-    condition_min_value = models.DecimalField(max_digits=10, decimal_places=2, db_column='CONDITION_MIN_VALUE', null=True, blank=True)
-    condition_max_value = models.DecimalField(max_digits=10, decimal_places=2, db_column='CONDITION_MAX_VALUE', null=True, blank=True)
+    condition_min_value = models.DecimalField(max_digits=10, decimal_places=4, db_column='CONDITION_MIN_VALUE', null=True, blank=True)
+    condition_max_value = models.DecimalField(max_digits=10, decimal_places=4, db_column='CONDITION_MAX_VALUE', null=True, blank=True)
     comparison_variable = models.CharField(max_length=255, db_column='COMPARISON_VARIABLE')
-    comparison_min_value = models.DecimalField(max_digits=10, decimal_places=2, db_column='COMPARISON_MIN_VALUE', null=True, blank=True)
-    comparison_max_value = models.DecimalField(max_digits=10, decimal_places=2, db_column='COMPARISON_MAX_VALUE', null=True, blank=True)
+    comparison_min_value = models.DecimalField(max_digits=10, decimal_places=4, db_column='COMPARISON_MIN_VALUE', null=True, blank=True)
+    comparison_max_value = models.DecimalField(max_digits=10, decimal_places=4, db_column='COMPARISON_MAX_VALUE', null=True, blank=True)
     comparison_operator = models.CharField(max_length=10, choices=CONDITIONAL_CHOICES, db_column='COMPARISON_OPERATOR', null=True, blank=True)
 
     class Meta:        
@@ -36,4 +36,4 @@ class MstConditions(BaseModel):
         verbose_name_plural = '10 Conditions'
 
     def __str__(self):
-        return f"Condition for {self.subcategory.name} - {self.condition_variable}"
+        return str(self.id)
