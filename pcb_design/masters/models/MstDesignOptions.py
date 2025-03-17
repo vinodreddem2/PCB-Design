@@ -14,8 +14,8 @@ class MstDesignOptions(BaseModel):
     
     class Meta:
         unique_together = ('desing_option_name', 'sub_category_id')
-        verbose_name = 'DesignOption'
-        verbose_name_plural = 'DesignOptions'
+        verbose_name = '05 DesignOption'
+        verbose_name_plural = '05 DesignOptions'
         
     def __str__(self):
         return self.desing_option_name

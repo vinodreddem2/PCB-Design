@@ -15,8 +15,8 @@ class MstSubCategory(BaseModel):
 
     class Meta:
         unique_together = ('sub_category_name', 'category_Id') 
-        verbose_name = 'Sub Category'
-        verbose_name_plural = 'Sub Categories' 
+        verbose_name = '03 Sub Category'
+        verbose_name_plural = '03 Sub Categories' 
 
     def __str__(self):
         return f"{self.sub_category_name}"

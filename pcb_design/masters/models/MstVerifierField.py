@@ -16,8 +16,8 @@ class MstVerifierField(BaseModel):
     name = AliasField(db_column='FIELD_NAME', blank=True, null=True, editable=False)
     
     class Meta:        
-        verbose_name = 'Verifier Field'
-        verbose_name_plural = 'Verifier Fields'
+        verbose_name = '08 Verifier Field'
+        verbose_name_plural = '08 Verifier Fields'
         unique_together = ('component', 'category', 'field_name')
 
     def __str__(self):

@@ -10,8 +10,8 @@ class MstComponent(BaseModel):
     name = AliasField(db_column='COMPONENT_NAME', blank=True, null=True, editable=False)
 
     class Meta:
-        verbose_name = 'Component'
-        verbose_name_plural = 'Components'
+        verbose_name = '01 Component'
+        verbose_name_plural = '01 Components'
     
     def __str__(self):
         return self.component_name

@@ -29,8 +29,8 @@ class MstConditions(BaseModel):
     comparison_operator = models.CharField(max_length=10, choices=CONDITIONAL_CHOICES, db_column='COMPARISON_OPERATOR', null=True, blank=True)
 
     class Meta:        
-        verbose_name = 'Condition'
-        verbose_name_plural = 'Conditions'
+        verbose_name = '10 Condition'
+        verbose_name_plural = '10 Conditions'
 
     def __str__(self):
         return f"Condition for {self.subcategory.name} - {self.condition_variable}"

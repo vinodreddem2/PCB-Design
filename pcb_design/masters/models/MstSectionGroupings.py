@@ -16,8 +16,8 @@ class MstSectionGroupings(BaseModel):
     name = AliasField(db_column='SECTION_NAME', blank=True, null=True, editable=False)
 
     class Meta:
-        verbose_name = 'Section Group'
-        verbose_name_plural = 'Section Groups'
+        verbose_name = '07 Section Group'
+        verbose_name_plural = '07 Section Groups'
         unique_together = ('design_doc', 'section_name')
 
     def __str__(self):

@@ -14,8 +14,8 @@ class MstCategory(BaseModel):
     
     class Meta:
         unique_together = ('category_name', 'component_Id')  
-        verbose_name = 'Category'
-        verbose_name_plural = 'Categories'
+        verbose_name = '02 Category'
+        verbose_name_plural = '02 Categories'
         
     def __str__(self):
         return self.category_name

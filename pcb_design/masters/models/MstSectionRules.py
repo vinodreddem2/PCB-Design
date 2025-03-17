@@ -17,8 +17,8 @@ class MstSectionRules(BaseModel):
 
     class Meta:
         unique_together = ('design_doc', 'rule_number')
-        verbose_name = 'Section Rule'
-        verbose_name_plural = 'Section Rules'
+        verbose_name = '06 Section Rule'
+        verbose_name_plural = '06 Section Rules'
 
     def __str__(self):
         return f"Rule {self.rule_number}"

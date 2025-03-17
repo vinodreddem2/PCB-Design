@@ -13,8 +13,8 @@ class MstVerifierRules(BaseModel):
     name = AliasField(db_column='RULE_NUMBER', blank=True, null=True, editable=False)
 
     class Meta:        
-        verbose_name = 'Verifier Rule'
-        verbose_name_plural = 'Verifier Rules'
+        verbose_name = '09 Verifier Rule'
+        verbose_name_plural = '09 Verifier Rules'
         unique_together = ('verifier_field', 'design_doc', 'rule_number')
 
     def __str__(self):
