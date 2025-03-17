@@ -17,8 +17,9 @@ CONDITIONAL_CHOICES = [
 ]
 
 class MstConditions(BaseModel):
-    id = models.AutoField(primary_key=True, editable=False, db_column='ID')
-    subcategory = models.ForeignKey(MstSubCategory, on_delete=models.CASCADE, db_column='SUB_CATEGORY_ID')
+    id = models.AutoField(primary_key=True, editable=False, db_column='ID')    
+    category = models.ForeignKey(MstCategory, on_delete=models.CASCADE, db_column='CATEGORY_ID', null=True, blank=True)
+    subcategory = models.ForeignKey(MstSubCategory, on_delete=models.CASCADE, db_column='SUB_CATEGORY_ID', null=True, blank=True)
     condition_variable = models.CharField(max_length=255, db_column='CONDITION_VARIABLE')
     condition_operator = models.CharField(max_length=10, choices=CONDITIONAL_CHOICES, db_column='CONDITION_OPERATOR', null=True, blank=True)
     condition_min_value = models.DecimalField(max_digits=10, decimal_places=2, db_column='CONDITION_MIN_VALUE', null=True, blank=True)

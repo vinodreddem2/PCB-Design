@@ -286,16 +286,16 @@ def condition_operators(condition, target_value):
                 is_deviated = True
     elif condition.comparison_operator == 'lt':
         if condition.comparison_min_value:
-
+            is_comparision_data_available = True    
             if not target_value < condition.comparison_min_value:
                 is_deviated = True
     return is_deviated, is_comparision_data_available
 
 
-def check_conditions(sub_category, pcb_specifications_inp):
+def check_conditions(sub_category, category, pcb_specifications_inp):
     res = []
     pcb_specifications = {int(k):v for k, v in pcb_specifications_inp.items()}    
-    conditions = MstConditions.objects.filter(subcategory=sub_category.id)    
+    conditions = MstConditions.objects.filter(Q(category=category.pk) | Q(subcategory=sub_category.pk))  
     right_to_draw_logs.info(f"Checking conditions for sub_category: {sub_category.name}, conditions: {len(conditions)}")
     
     # Group conditions by condition_variable and comparison_variable
@@ -313,13 +313,29 @@ def check_conditions(sub_category, pcb_specifications_inp):
         group_deviation_found = False
         atleast_one_conditon_sat_compare = False      
 
-        if condition_variable.strip() == 'B14 Size':            
-            condition_id = MstCategory.objects.get(category_name='B14 Size').id
-            selected_val = pcb_specifications.get(condition_id)
+        condition_variable = condition_variable.strip().lower()
+        comparison_variable = comparison_variable.strip().lower()
         
-        if comparison_variable.strip() == 'Dielectric Thickness':
-            comparision_id = MstCategory.objects.get(category_name='Dielectric Thickness').id
-            target_val = pcb_specifications.get(comparision_id)            
+        try:
+            condition_id = MstCategory.objects.get(category_name__iexact=condition_variable).id
+            comparision_id = MstCategory.objects.get(category_name__iexact=comparison_variable).id
+        except ObjectDoesNotExist as ex:
+            right_to_draw_logs.info(f"Invalid Category Name submitted: {condition_variable} or {comparison_variable} for Condition Check")
+            right_to_draw_logs.info(f"Exception Occurred: {ex}")
+            deviation_result = {
+                'categor_id' : category.pk,
+                'name': category.category_name,
+                'selected_deviation_id': "N/A",
+                'selected_deviation_name': "N/A",
+                'is_deviated': True
+            }
+            res.append(deviation_result)
+            continue
+
+        
+        selected_val = pcb_specifications.get(condition_id)
+        target_val = pcb_specifications.get(comparision_id)            
+
 
         if not selected_val:
             right_to_draw_logs.info(f"{condition_variable} Value does not exists in the input for Condition Check")
@@ -369,10 +385,23 @@ def check_conditions(sub_category, pcb_specifications_inp):
             elif condition.condition_operator == 'eq':
                 if selected_val == condition.condition_min_value:
                     is_condition_satisfied = True
+            # For Category B11 and B17 we are having the conditions like Add and Sub So we don't need to check the 
+            # Condition Operator Range values so Selected Val plus or Minus of the selected target value is fine
+            elif condition.condition_operator == 'add':
+                group_prequisite_met = True
+                if selected_val + condition.condition_min_value != target_val:                                                        
+                    group_deviation_found = True
+            elif condition.condition_operator == 'sub':
+                group_prequisite_met = True
+                if selected_val - condition.condition_min_value != target_val:                                                        
+                    group_deviation_found = True
             else:
                 continue
             
             right_to_draw_logs.info(f"Is Basic Condition Satisfied {is_condition_satisfied}")
+            # As of now no need to execute this condition for add or sub operators it will be use for 
+            # comparision operators Even If it executes nothing will happen, since we do not have
+            # conditon operator for this
             if is_condition_satisfied:
                 group_prequisite_met = True
                 group_deviation_found, comparision_data_availablity = condition_operators(condition, target_val)
@@ -458,6 +487,7 @@ def compare_verifier_data_with_design_data(data):
     pcb_specifications_d = template.pcb_specifications 
     design_template_specification_data = {int(k):int(v) for k, v in pcb_specifications_d.items()}
     
+    component = MstComponent.objects.get(id=component_id)
     # Looping Each record from the verfier template
     # Here B14 Size and Dielectric Thickness is going to be the Text Boxes    
     for category_id, selected_sub_category_id in input_specifications_data.items():
@@ -482,7 +512,10 @@ def compare_verifier_data_with_design_data(data):
             
             # For Dielectric Thickness, The Verifer enter the value manually Entered Value Instead 
             # of selecting from Drop Down
-            if category.category_name.strip() == 'Dielectric Thickness' or category.category_name.strip() == 'B14 Size':
+            if (category.category_name.strip() == 'Dielectric Thickness' or 
+                category.category_name.strip() == 'B14 Size') and \
+                component.component_name.strip().lower() == 'b14':
+
                 right_to_draw_logs.info(f"Validating the {category.category_name} & category value {selected_sub_category_id}")
                 selected_val = float(selected_sub_category_id)
                 
@@ -574,11 +607,13 @@ def compare_verifier_data_with_design_data(data):
                     'is_deviated': is_deviated 
                 }
                 design_verification_res = append_design_response_to_final_response(design_verification_res, deviation_result)
-                if MstConditions.objects.filter(subcategory=sub_category.pk).exists():
-                    conditons_res = check_conditions(sub_category, input_specifications_data)                
+                
+                if MstConditions.objects.filter(Q(category=category_id) | Q(subcategory=sub_category.pk)).exists():
+                    conditons_res = check_conditions(sub_category, category, input_specifications_data)
                     # Iterate over the conditions response
                     for condition in conditons_res:
                         design_verification_res = append_design_response_to_final_response(design_verification_res, condition)
+                
         except Exception as ex:
             right_to_draw_logs.info(f"Exception Occurred for {category_id} :{sub_category_id} -- {ex}")        
     
