@@ -14,6 +14,8 @@ CONDITIONAL_CHOICES = [
             ('lt', 'Less than'),
             ('lte', 'Less than or equal to'),
             ('range', 'Within a range'),
+            ('add', 'Add'),
+            ('sub', 'Subtract'),
 ]
 
 class MstConditions(BaseModel):
