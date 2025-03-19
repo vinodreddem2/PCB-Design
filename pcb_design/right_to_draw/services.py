@@ -651,16 +651,32 @@ def get_dielectric_material_selected_value(data):
     return die_material_val
 
 
-def comapre_verfier_data_with_rules(verifier_id, field_value, design_data):    
+def comapre_verfier_data_with_rules(verifier_id, field_value, design_data, ceramic_reasonator_value):    
     try:
         right_to_draw_logs.info(f"Compare verifier data with rules for verifier_id: {verifier_id}, field_value: {field_value}") 
-        verifier_field = MstVerifierField.objects.get(id=int(verifier_id))        
-        verifier_rule = MstVerifierRules.objects.get(verifier_field=verifier_field.pk)        
+        verifier_field = MstVerifierField.objects.get(id=int(verifier_id))
+
+        if ceramic_reasonator_value:
+            verifier_rule = MstVerifierRules.objects.filter(
+            Q(verifier_field=verifier_field.pk) & 
+            Q(condition_variable='ceramic_resonator_size') & 
+            Q(comparison_variable=ceramic_reasonator_value)
+            )
+        else:
+            verifier_rule = MstVerifierRules.objects.filter(verifier_field=verifier_field.pk)
+
+        if not verifier_rule.exists():
+            right_to_draw_logs.info(f"No verifier rule found for verifier_id {verifier_id}")
+            return False
+        else:
+            verifier_rule = verifier_rule.first()
+
         rules = verifier_rule.rule_number
         rule_numbers = rules.split(',')
         is_deviation = False
         for rule_number in rule_numbers:
-            if verifier_field.field_name.strip() == 'Mounting of Transformers':
+            rule_number = rule_number.strip()
+            if verifier_field.field_name.strip() == 'Enter minimum dot size for mounting of Transformers in a DWG':
                 die_material_val =  get_dielectric_material_selected_value(design_data)
                 # For 'Mounting of Transformers' If Dielectric Material is 'Rogers: RO4350B'
                 # Then only '4.11.2' rule needs to execute else Do not execute
@@ -668,8 +684,7 @@ def comapre_verfier_data_with_rules(verifier_id, field_value, design_data):
                 if die_material_val == 'Rogers: RO4350B' and rule_number != '4.11.2':
                     continue
                 if die_material_val != 'Rogers: RO4350B' and rule_number == '4.11.2':
-                    continue
-            rule_number = rule_number.strip()
+                    continue            
             design_doc = verifier_rule.design_doc
             design_doc = design_doc.strip()  
             section_rule = MstSectionRules.objects.get(rule_number=rule_number, design_doc=design_doc)
@@ -699,14 +714,57 @@ def comapre_verfier_data_with_rules(verifier_id, field_value, design_data):
         return False
 
 
-def comapre_verfier_data(verified_data, design_data):
+def get_category_for_b11_value(design_data):
+    category_b11_val = None
+    for category_id, selected_sub_category_id in design_data.items():
+        try:
+            category_id = int(category_id)        
+            try:
+                category = MstCategory.objects.get(id=category_id)
+            except ObjectDoesNotExist as ex:
+                continue
+            if category.category_name.strip().lower() == 'category for b11':
+                sub_category = MstSubCategory.objects.get(id=selected_sub_category_id)
+                category_b11_val = sub_category.name
+                break
+        except Exception as ex:
+            right_to_draw_logs.info("Unable to fetch the Dielectric Material Value")
+    return category_b11_val
+
+
+def get_ceramic_reasonator_selected_value(data):
+    ceramic_reasonator_val = None
+    for verifier_id, selected_val in data.items():
+        try:
+            verifier_id = int(verifier_id)        
+            try:
+                verifier_field = MstVerifierField.objects.get(id=verifier_id)
+            except ObjectDoesNotExist as ex:
+                continue
+            verifier_field_name = verifier_field.field_name.strip().strip('.').strip().lower()
+            if verifier_field_name == 'enter the ceramic resonator size':
+                ceramic_reasonator_val = selected_val
+                break
+        except Exception as ex:
+            right_to_draw_logs.info("Unable to fetch the Ceramic Resonator Value")
+    return ceramic_reasonator_val
+
+
+def comapre_verfier_data(verified_data, design_data, component_id):
     verifier_res = []
+    ceramic_reasonator_value = None
+    component = MstComponent.objects.get(id=component_id)    
+    if component.component_name.strip().lower() == 'b11':
+        category_b11_val = get_category_for_b11_value(design_data)
+        if category_b11_val.strip().lower() == 'ceramic resonator technology':
+            ceramic_reasonator_value = get_ceramic_reasonator_selected_value(verified_data)
+
     for id, val in verified_data.items():
         val = float(val)
         if val == 0:
             data = {'id' :id, 'name':name, 'value':val, 'is_deviated':False}
         else:
-            is_deviated = comapre_verfier_data_with_rules(id, val, design_data)
+            is_deviated = comapre_verfier_data_with_rules(id, val, design_data, ceramic_reasonator_value)
             verifier_field = MstVerifierField.objects.get(id=id)
             name = verifier_field.name
             data = {'id' :id, 'name':name, 'value':val, 'is_deviated':is_deviated}
@@ -733,7 +791,7 @@ def compare_verifier_data_with_rules_and_designs(data):
     res['verify_design_fields_data']= design_specification_data
 
     right_to_draw_logs.info(f"Compare verifier data with rules and designs for {result_string}")    
-    verified_rule_data = comapre_verfier_data(data.get("verifierQueryData"), data.get('componentSpecifications'))
+    verified_rule_data = comapre_verfier_data(data.get("verifierQueryData"), data.get('componentSpecifications'),  data.get('component'))
     res['verified_query_data'] = verified_rule_data
 
 
