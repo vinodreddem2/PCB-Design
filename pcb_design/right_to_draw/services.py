@@ -627,7 +627,7 @@ def compare_verifier_data_with_design_data(data):
                         design_verification_res = append_design_response_to_final_response(design_verification_res, condition)
                 
         except Exception as ex:
-            right_to_draw_logs.info(f"Exception Occurred for {category_id} :{sub_category_id} -- {ex}")        
+            right_to_draw_logs.info(f"Exception Occurred for {category_id} :{selected_sub_category_id} -- {ex}")        
     
     right_to_draw_logs.info(f"Design Verification completed for {log_str}")
     return design_verification_res
