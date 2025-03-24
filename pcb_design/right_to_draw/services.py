@@ -656,20 +656,28 @@ def comapre_verfier_data_with_rules(verifier_id, field_value, design_data, ceram
         right_to_draw_logs.info(f"Compare verifier data with rules for verifier_id: {verifier_id}, field_value: {field_value}") 
         verifier_field = MstVerifierField.objects.get(id=int(verifier_id))
 
+        verifier_rule = []
         if ceramic_reasonator_value:
-            verifier_rule = MstVerifierRules.objects.filter(
-            Q(verifier_field=verifier_field.pk) & 
-            Q(condition_variable='ceramic_resonator_size') & 
-            Q(comparison_variable=ceramic_reasonator_value)
-            )
+            filtered_rules = MstVerifierRules.objects.filter(verifier_field=verifier_field.pk)
+            for rule in filtered_rules:
+                if rule.conditional_var.strip().lower() == 'ceramic_resonator_size':
+                    rul_val = rule.value.strip().lower()
+                    if rul_val and float(rul_val) == float(ceramic_reasonator_value):
+                        verifier_rule.append(rule)
+                # Ceramic Reasonator is for few rules only applicable, So for other rules
+                # the value is empty so we can go ahead and add if the value is empty
+                elif rule.conditional_var is None or rule.conditional_var == '':
+                    verifier_rule.append(rule)
         else:
-            verifier_rule = MstVerifierRules.objects.filter(verifier_field=verifier_field.pk)
+            verifier_rule = list(MstVerifierRules.objects.filter(verifier_field=verifier_field.pk))            
 
-        if not verifier_rule.exists():
+        if not verifier_rule:
             right_to_draw_logs.info(f"No verifier rule found for verifier_id {verifier_id}")
             return False
         else:
-            verifier_rule = verifier_rule.first()
+            verifier_rule = verifier_rule[0]
+        
+        right_to_draw_logs.info(f"Verifier Rule found for verifier_id {verifier_id} --- is : {verifier_rule.rule_number}-{verifier_rule.design_doc}")
 
         rules = verifier_rule.rule_number
         rule_numbers = rules.split(',')
@@ -682,8 +690,10 @@ def comapre_verfier_data_with_rules(verifier_id, field_value, design_data, ceram
                 # Then only '4.11.2' rule needs to execute else Do not execute
                 # Vice Versa.
                 if die_material_val == 'Rogers: RO4350B' and rule_number != '4.11.2':
-                    continue
+                    right_to_draw_logs.info(f"Dielectric Material is 'Rogers: RO4350B' and rule number is not '4.11.2', So Skipping the Rule")
+                    continue                
                 if die_material_val != 'Rogers: RO4350B' and rule_number == '4.11.2':
+                    right_to_draw_logs.info(f"Dielectric Material is not 'Rogers: RO4350B' and rule number is '4.11.2', So Skipping the Rule")
                     continue            
             design_doc = verifier_rule.design_doc
             design_doc = design_doc.strip()  
