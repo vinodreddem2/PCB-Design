@@ -771,12 +771,17 @@ def comapre_verfier_data(verified_data, design_data, component_id):
 
     for id, val in verified_data.items():
         val = float(val)
+        try:
+            verifier_field = MstVerifierField.objects.get(id=id)
+            name = verifier_field.name
+        except ObjectDoesNotExist as ex:
+            right_to_draw_logs.info(f"Verifier Field not found for verifier id {id}: {str(ex)}")
+            right_to_draw_logs.error(f"Verifier Field not found for verifier id {id}: {str(ex)}")
+            data = {'id' :id, 'name':'Not Applicable', 'value':val, 'is_deviated':True}
         if val == 0:
             data = {'id' :id, 'name':name, 'value':val, 'is_deviated':False}
         else:
             is_deviated = comapre_verfier_data_with_rules(id, val, design_data, ceramic_reasonator_value)
-            verifier_field = MstVerifierField.objects.get(id=id)
-            name = verifier_field.name
             data = {'id' :id, 'name':name, 'value':val, 'is_deviated':is_deviated}
         verifier_res.append(data)
     return verifier_res
