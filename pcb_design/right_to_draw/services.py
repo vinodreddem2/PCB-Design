@@ -503,6 +503,7 @@ def compare_verifier_data_with_design_data(data):
     # Looping Each record from the verfier template
     # Here B14 Size and Dielectric Thickness is going to be the Text Boxes    
     for category_id, selected_sub_category_id in input_specifications_data.items():
+        is_deviated = False
         try:
             category_id = int(category_id)        
             try:
@@ -587,6 +588,7 @@ def compare_verifier_data_with_design_data(data):
                     design_verification_res = append_design_response_to_final_response(design_verification_res, deviation_result)
                     right_to_draw_logs.info(f"The Dielectric Thickness result for {selected_sub_category_id}, component_id: {component_id} is {is_deviated}")
                     continue
+            
 
             else:
                 try:
@@ -598,7 +600,7 @@ def compare_verifier_data_with_design_data(data):
                         'name': category.category_name,
                         'selected_deviation_id': selected_sub_category_id,
                         'selected_deviation_name': "N/A",
-                        'is_deviated': False
+                        'is_deviated': True
                     }
                     design_verification_res = append_design_response_to_final_response(design_verification_res, deviation_result)
                     continue                
